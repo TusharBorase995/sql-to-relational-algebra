@@ -23,17 +23,18 @@ import NodeInspector from './components/NodeInspector';
 
 const DEFAULT_SQL = `SELECT s.name, d.name
 FROM students s, departments d
-WHERE s.age > 20 AND s.dept_id = d.id;`;
+WHERE s.age > 20
+  AND s.dept_id = d.id;`;
 
 const OPERATOR_LEGEND = [
-  { symbol: 'π', name: 'Projection', color: '#6366f1' },
-  { symbol: 'σ', name: 'Selection', color: '#10b981' },
-  { symbol: '⋈', name: 'Join', color: '#a855f7' },
-  { symbol: '×', name: 'Cross', color: '#f59e0b' },
-  { symbol: 'γ', name: 'Aggregation', color: '#e11d48' },
-  { symbol: 'δ', name: 'Distinct', color: '#0d9488' },
-  { symbol: 'τ', name: 'Sort', color: '#d946ef' },
-  { symbol: '∪/∩/−', name: 'Set', color: '#0284c7' }
+  { symbol: 'π', name: 'Projection', color: '#5B4BDB' },
+  { symbol: 'σ', name: 'Selection', color: '#087F5B' },
+  { symbol: '⋈', name: 'Join', color: '#7C3AED' },
+  { symbol: '×', name: 'Cross', color: '#C2410C' },
+  { symbol: 'γ', name: 'Aggregation', color: '#B45309' },
+  { symbol: 'δ', name: 'Distinct', color: '#0F766E' },
+  { symbol: 'τ', name: 'Sort', color: '#7C3AED' },
+  { symbol: '∪/∩/−', name: 'Set', color: '#0284C7' }
 ];
 
 export default function App() {
@@ -257,7 +258,7 @@ export default function App() {
   const renderPlanList = (node, depth = 0) => {
     if (!node) return null;
     return (
-      <div key={node.id} style={{ marginLeft: `${depth * 20}px`, marginTop: '6px', fontFamily: 'var(--font-mono)', fontSize: '12px' }}>
+      <div key={node.id} style={{ marginLeft: `${depth * 20}px`, marginTop: '6px', fontFamily: 'var(--font-mono)', fontSize: '13px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>&rarr;</span>
           <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{node.op_name} ({node.op_symbol}):</span>
@@ -289,7 +290,7 @@ export default function App() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 18px',
+          padding: '0 20px',
           zIndex: 20,
           flexShrink: 0
         }}
@@ -309,13 +310,13 @@ export default function App() {
               color: 'var(--primary)'
             }}
           >
-            <Database size={18} />
+            <Database size={17} />
           </div>
           <div>
-            <div style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text-primary)', letterSpacing: '-0.2px' }}>
+            <div style={{ fontWeight: '600', fontSize: '18px', color: 'var(--text-primary)', letterSpacing: '-0.2px', lineHeight: 1.2 }}>
               SQL &rarr; Relational Algebra
             </div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+            <div style={{ fontSize: '12px', fontWeight: '400', color: 'var(--text-muted)', marginTop: '1px' }}>
               Write SQL. See the Relational Algebra.
             </div>
           </div>
@@ -332,7 +333,7 @@ export default function App() {
               border: '1px solid var(--border-color)',
               borderRadius: 'var(--radius-sm)',
               padding: '6px 12px',
-              fontSize: '12px',
+              fontSize: '13px',
               outline: 'none',
               cursor: 'pointer',
               maxWidth: '280px'
@@ -369,7 +370,7 @@ export default function App() {
             onMouseEnter={e => !loading && (e.currentTarget.style.background = 'var(--primary-hover)')}
             onMouseLeave={e => !loading && (e.currentTarget.style.background = 'var(--primary)')}
           >
-            {loading ? <RefreshCw size={14} className="spin" /> : <Play size={14} fill="#ffffff" />}
+            {loading ? <RefreshCw size={14} className="spin" /> : <Play size={13} fill="#ffffff" />}
             <span>Compile</span>
           </button>
 
@@ -381,19 +382,19 @@ export default function App() {
               gap: '6px',
               fontSize: '12px',
               fontWeight: '500',
-              color: serverOk ? '#065f46' : '#b91c1c',
+              color: serverOk ? '#087F5B' : '#d92d20',
               background: serverOk ? '#ecfdf5' : '#fef2f2',
-              padding: '5px 10px',
-              borderRadius: '20px',
-              border: `1px solid ${serverOk ? '#a7f3d0' : '#fecaca'}`
+              padding: '4px 10px',
+              borderRadius: '999px',
+              border: `1px solid ${serverOk ? '#a7e3cf' : '#fecaca'}`
             }}
           >
             <span
               style={{
-                width: '7px',
-                height: '7px',
+                width: '6px',
+                height: '6px',
                 borderRadius: '50%',
-                background: serverOk ? '#059669' : '#dc2626'
+                background: serverOk ? '#087F5B' : '#d92d20'
               }}
             />
             <span>{serverOk ? 'Online' : 'Offline'}</span>
@@ -431,9 +432,9 @@ export default function App() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                padding: '9px 14px',
-                fontSize: '12px',
-                fontWeight: '600',
+                padding: '8px 14px',
+                fontSize: '13px',
+                fontWeight: leftTab === 'editor' ? '600' : '500',
                 background: leftTab === 'editor' ? '#ffffff' : 'transparent',
                 color: leftTab === 'editor' ? 'var(--text-primary)' : 'var(--text-muted)',
                 border: '1px solid var(--border-color)',
@@ -454,9 +455,9 @@ export default function App() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                padding: '9px 14px',
-                fontSize: '12px',
-                fontWeight: '600',
+                padding: '8px 14px',
+                fontSize: '13px',
+                fontWeight: leftTab === 'tokens' ? '600' : '500',
                 background: leftTab === 'tokens' ? '#ffffff' : 'transparent',
                 color: leftTab === 'tokens' ? 'var(--text-primary)' : 'var(--text-muted)',
                 border: '1px solid var(--border-color)',
@@ -473,11 +474,12 @@ export default function App() {
               {result?.tokens && (
                 <span
                   style={{
-                    fontSize: '10px',
-                    padding: '1px 5px',
-                    borderRadius: '8px',
-                    background: '#e2e8f0',
-                    color: 'var(--text-secondary)'
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    padding: '1px 6px',
+                    borderRadius: '999px',
+                    background: '#f2f4f7',
+                    color: 'var(--text-muted)'
                   }}
                 >
                   {result.tokens.length}
@@ -516,7 +518,7 @@ export default function App() {
                 border: 'none',
                 borderRadius: 'var(--radius-sm)',
                 padding: '9px',
-                fontSize: '13px',
+                fontSize: '14px',
                 fontWeight: '600',
                 cursor: loading ? 'not-allowed' : 'pointer',
                 transition: 'background 0.15s ease'
@@ -524,9 +526,9 @@ export default function App() {
               onMouseEnter={e => !loading && (e.currentTarget.style.background = 'var(--primary-hover)')}
               onMouseLeave={e => !loading && (e.currentTarget.style.background = 'var(--primary)')}
             >
-              {loading ? <RefreshCw size={14} className="spin" /> : <Play size={14} fill="#ffffff" />}
+              {loading ? <RefreshCw size={14} className="spin" /> : <Play size={13} fill="#ffffff" />}
               <span>Compile</span>
-              <span style={{ fontSize: '11px', opacity: 0.7, marginLeft: '6px' }}>Ctrl + Enter</span>
+              <span style={{ fontSize: '12px', color: '#a7e3cf', marginLeft: '6px', fontWeight: '400' }}>Ctrl + Enter</span>
             </button>
           </div>
         </div>
@@ -575,7 +577,7 @@ export default function App() {
             }}
           >
             {/* Optimized vs Canonical Tabs */}
-            <div style={{ display: 'flex', gap: '4px' }}>
+            <div style={{ display: 'flex', gap: '6px' }}>
               <button
                 onClick={() => setViewMode('optimized')}
                 style={{
@@ -586,11 +588,10 @@ export default function App() {
                   borderRadius: 'var(--radius-sm)',
                   fontSize: '12px',
                   fontWeight: '600',
-                  border: '1px solid var(--border-color)',
+                  border: `1px solid ${viewMode === 'optimized' ? '#a7e3cf' : 'var(--border-color)'}`,
                   cursor: 'pointer',
                   background: viewMode === 'optimized' ? '#ecfdf5' : '#ffffff',
-                  color: viewMode === 'optimized' ? '#065f46' : 'var(--text-secondary)',
-                  borderColor: viewMode === 'optimized' ? '#a7f3d0' : 'var(--border-color)'
+                  color: viewMode === 'optimized' ? '#087f5b' : 'var(--text-muted)'
                 }}
               >
                 <Sparkles size={13} />
@@ -606,11 +607,11 @@ export default function App() {
                   padding: '5px 12px',
                   borderRadius: 'var(--radius-sm)',
                   fontSize: '12px',
-                  fontWeight: '600',
-                  border: '1px solid var(--border-color)',
+                  fontWeight: '500',
+                  border: `1px solid ${viewMode === 'unoptimized' ? 'var(--border-strong)' : 'var(--border-color)'}`,
                   cursor: 'pointer',
                   background: viewMode === 'unoptimized' ? '#f1f5f9' : '#ffffff',
-                  color: viewMode === 'unoptimized' ? 'var(--text-primary)' : 'var(--text-secondary)'
+                  color: viewMode === 'unoptimized' ? 'var(--text-primary)' : 'var(--text-muted)'
                 }}
               >
                 <GitBranch size={13} />
@@ -618,12 +619,14 @@ export default function App() {
               </button>
             </div>
 
-            {/* Optimization Badge */}
+            {/* Optimization Status */}
             {result?.ra_string_optimized && result?.ra_string_unoptimized && (
               <div style={{ fontSize: '12px' }}>
                 {result.ra_string_optimized !== result.ra_string_unoptimized ? (
-                  <span style={{ color: '#059669', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Check size={14} /> Optimized (Pushdown / Join converted)
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Check size={13} color="#087F5B" />
+                    <span style={{ color: '#087F5B', fontWeight: '600' }}>Optimized</span>
+                    <span style={{ color: 'var(--text-muted)' }}>&middot; Pushdown &middot; Join converted</span>
                   </span>
                 ) : (
                   <span style={{ color: 'var(--text-muted)' }}>Canonical tree is already minimal</span>
@@ -632,35 +635,35 @@ export default function App() {
             )}
           </div>
 
-          {/* Relational Algebra Formula Bar */}
+          {/* Relational Algebra Formula Bar (Gives prominent vertical room) */}
           <div
             style={{
-              padding: '10px 14px',
+              padding: '12px 16px',
               borderBottom: '1px solid var(--border-color)',
               background: '#ffffff',
               display: 'flex',
               alignItems: 'flex-start',
               justifyContent: 'space-between',
-              gap: '12px'
+              gap: '14px'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', flex: 1, minWidth: 0 }}>
-              <span style={{ fontWeight: '700', fontSize: '13px', color: 'var(--text-primary)', whiteSpace: 'nowrap', marginTop: '1px' }}>
-                Relational Algebra:
-              </span>
-              <span
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: '600', fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                RELATIONAL ALGEBRA
+              </div>
+              <div
                 style={{
                   fontFamily: 'var(--font-mono)',
-                  fontSize: '13px',
-                  color: '#1e293b',
+                  fontSize: '14.5px',
+                  fontWeight: '500',
+                  color: '#101828',
                   lineHeight: '1.5',
                   wordBreak: 'break-word',
-                  whiteSpace: 'normal',
-                  flex: 1
+                  whiteSpace: 'normal'
                 }}
               >
                 {currentLinearStr || '—'}
-              </span>
+              </div>
             </div>
 
             <button
@@ -669,20 +672,21 @@ export default function App() {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px',
+                gap: '5px',
                 background: '#ffffff',
                 border: '1px solid var(--border-color)',
                 borderRadius: 'var(--radius-sm)',
                 padding: '4px 10px',
-                fontSize: '11px',
+                fontSize: '12px',
                 fontWeight: '500',
-                color: copied ? '#059669' : 'var(--text-secondary)',
+                color: copied ? '#087F5B' : 'var(--text-secondary)',
                 cursor: 'pointer',
                 flexShrink: 0,
-                marginTop: '1px'
+                marginTop: '2px',
+                boxShadow: 'var(--shadow-xs)'
               }}
             >
-              {copied ? <Check size={12} /> : <Copy size={12} />}
+              {copied ? <Check size={12} color="#087F5B" /> : <Copy size={12} />}
               <span>{copied ? 'Copied' : 'Copy'}</span>
             </button>
           </div>
@@ -692,36 +696,36 @@ export default function App() {
             style={{
               padding: '6px 14px',
               borderBottom: '1px solid var(--border-color)',
-              background: '#fafbfc',
+              background: '#fcfcfd',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              fontSize: '11px'
+              fontSize: '12px'
             }}
           >
             {/* Operators Legend */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
               {OPERATOR_LEGEND.map(op => (
                 <div key={op.name} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ fontWeight: '700', color: op.color, fontFamily: 'var(--font-mono)' }}>{op.symbol}</span>
-                  <span style={{ color: 'var(--text-secondary)' }}>{op.name}</span>
+                  <span style={{ fontWeight: '600', color: op.color, fontFamily: 'var(--font-mono)', fontSize: '13px' }}>{op.symbol}</span>
+                  <span style={{ color: '#667085', fontSize: '12px' }}>{op.name}</span>
                 </div>
               ))}
             </div>
 
-            {/* View Toggle: Tree vs Plan */}
+            {/* View Toggle: Tree vs Plan (Segmented control) */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ color: 'var(--text-muted)' }}>View:</span>
-              <div style={{ display: 'flex', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
+              <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>View</span>
+              <div style={{ display: 'flex', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', overflow: 'hidden', background: '#f8fafc' }}>
                 <button
                   onClick={() => setDisplayType('tree')}
                   style={{
-                    padding: '2px 8px',
-                    fontSize: '11px',
+                    padding: '3px 10px',
+                    fontSize: '12px',
                     border: 'none',
                     cursor: 'pointer',
-                    background: displayType === 'tree' ? '#e2e8f0' : '#ffffff',
-                    color: displayType === 'tree' ? '#0f172a' : 'var(--text-muted)',
+                    background: displayType === 'tree' ? '#ecfdf5' : 'transparent',
+                    color: displayType === 'tree' ? '#087f5b' : 'var(--text-muted)',
                     fontWeight: displayType === 'tree' ? '600' : '400'
                   }}
                 >
@@ -730,12 +734,12 @@ export default function App() {
                 <button
                   onClick={() => setDisplayType('plan')}
                   style={{
-                    padding: '2px 8px',
-                    fontSize: '11px',
+                    padding: '3px 10px',
+                    fontSize: '12px',
                     border: 'none',
                     cursor: 'pointer',
-                    background: displayType === 'plan' ? '#e2e8f0' : '#ffffff',
-                    color: displayType === 'plan' ? '#0f172a' : 'var(--text-muted)',
+                    background: displayType === 'plan' ? '#ecfdf5' : 'transparent',
+                    color: displayType === 'plan' ? '#087f5b' : 'var(--text-muted)',
                     fontWeight: displayType === 'plan' ? '600' : '400'
                   }}
                 >
@@ -787,7 +791,7 @@ export default function App() {
           height: '7px',
           cursor: 'row-resize',
           background: isDraggingH ? 'var(--primary-light)' : '#f8fafc',
-          borderTop: '1px solid var(--border-color)',
+          borderTop: '1px solid var(--border-strong)',
           borderBottom: '1px solid var(--border-color)',
           display: 'flex',
           alignItems: 'center',
@@ -826,12 +830,12 @@ export default function App() {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '8px',
               padding: '8px 16px',
               fontSize: '13px',
               fontWeight: '600',
               background: '#ffffff',
-              color: '#065f46',
+              color: 'var(--text-primary)',
               border: '1px solid var(--border-color)',
               borderBottom: '1px solid #ffffff',
               marginBottom: '-1px',
@@ -839,17 +843,18 @@ export default function App() {
               borderTopRightRadius: '4px'
             }}
           >
-            <Database size={14} color="#059669" />
+            <Database size={14} color="#667085" />
             <span>Catalog Schema</span>
             {schema?.tables && (
               <span
                 style={{
                   fontSize: '11px',
-                  padding: '1px 6px',
-                  borderRadius: '10px',
-                  background: '#ecfdf5',
-                  color: '#065f46',
-                  border: '1px solid #a7f3d0'
+                  fontWeight: '500',
+                  padding: '2px 8px',
+                  borderRadius: '999px',
+                  background: '#f2f4f7',
+                  color: '#667085',
+                  border: '1px solid var(--border-color)'
                 }}
               >
                 {schema.tables.length} tables

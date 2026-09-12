@@ -1,19 +1,19 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 
 const OP_COLORS = {
-  'π': { bg: '#ede9fe', border: '#c4b5fd', text: '#3b0764', label: '#4c1d95', badge: '#ddd6fe' }, // Projection (lavender)
-  'σ': { bg: '#dcfce7', border: '#86efac', text: '#052e16', label: '#14532d', badge: '#bbf7d0' }, // Selection (mint)
-  '⋈': { bg: '#f3e8ff', border: '#d8b4fe', text: '#3b0764', label: '#581c87', badge: '#e9d5ff' }, // Theta Join (soft purple)
-  '×': { bg: '#fef3c7', border: '#fcd34d', text: '#451a03', label: '#78350f', badge: '#fde68a' }, // Cross Product (amber)
-  'γ': { bg: '#ffe4e6', border: '#fecdd3', text: '#4c0519', label: '#881337', badge: '#fecdd3' }, // Aggregation (soft rose)
-  'τ': { bg: '#fae8ff', border: '#f5d0fe', text: '#4a044e', label: '#701a75', badge: '#f0abfc' }, // Sort (soft pink)
-  'δ': { bg: '#ccfbf1', border: '#99f6e4', text: '#042f2e', label: '#134e4a', badge: '#5eead4' }, // Distinct (teal)
-  '∪': { bg: '#e0f2fe', border: '#bae6fd', text: '#082f49', label: '#0369a1', badge: '#7dd3fc' }, // Union
-  '∩': { bg: '#e0f2fe', border: '#bae6fd', text: '#082f49', label: '#0369a1', badge: '#7dd3fc' }, // Intersect
-  '−': { bg: '#fee2e2', border: '#fca5a5', text: '#450a0a', label: '#991b1b', badge: '#f87171' }, // Except
-  'R': { bg: '#f8fafc', border: '#e2e8f0', text: '#0f172a', label: '#475569', badge: '#f1f5f9' }  // Base Relation
+  'π': { bg: '#F3F1FF', border: '#DDD6FE', symbol: '#5B4BDB', label: '#475467' }, // Projection
+  'σ': { bg: '#ECFDF5', border: '#A7E3CF', symbol: '#087F5B', label: '#475467' }, // Selection
+  '⋈': { bg: '#F5F3FF', border: '#DDD6FE', symbol: '#7C3AED', label: '#475467' }, // Join
+  '×': { bg: '#FFF7ED', border: '#FED7AA', symbol: '#C2410C', label: '#475467' }, // Cross
+  'γ': { bg: '#FFFBEB', border: '#FDE68A', symbol: '#B45309', label: '#475467' }, // Aggregation
+  'δ': { bg: '#F0FDFA', border: '#99F6E4', symbol: '#0F766E', label: '#475467' }, // Distinct
+  'τ': { bg: '#F5F3FF', border: '#DDD6FE', symbol: '#7C3AED', label: '#475467' }, // Sort
+  '∪': { bg: '#F0F9FF', border: '#BAE6FD', symbol: '#0284C7', label: '#475467' }, // Union
+  '∩': { bg: '#F0F9FF', border: '#BAE6FD', symbol: '#0284C7', label: '#475467' }, // Intersect
+  '−': { bg: '#FEF3F2', border: '#FECDCA', symbol: '#D92D20', label: '#475467' }, // Except
+  'R': { bg: '#F8FAFC', border: '#E4E7EC', symbol: '#101828', label: '#475467' }  // Base Relation
 };
 
 export default function RaTree({ data, onSelectNode, selectedNodeId }) {
@@ -45,9 +45,9 @@ export default function RaTree({ data, onSelectNode, selectedNodeId }) {
     // Setup hierarchy layout
     const root = d3.hierarchy(data, d => d.children);
 
-    const nodeWidth = 170;
-    const nodeHeight = 65;
-    const treeLayout = d3.tree().nodeSize([nodeWidth + 35, nodeHeight + 45]);
+    const nodeWidth = 168;
+    const nodeHeight = 64;
+    const treeLayout = d3.tree().nodeSize([nodeWidth + 36, nodeHeight + 46]);
 
     treeLayout(root);
 
@@ -63,9 +63,9 @@ export default function RaTree({ data, onSelectNode, selectedNodeId }) {
       .attr('class', 'tree-link')
       .attr('d', linkGenerator)
       .attr('fill', 'none')
-      .attr('stroke', '#94a3b8')
-      .attr('stroke-width', 1.8)
-      .attr('opacity', 0.85);
+      .attr('stroke', '#D0D5DD')
+      .attr('stroke-width', 1.6)
+      .attr('opacity', 0.95);
 
     // Node groups
     const node = g.selectAll('.tree-node')
@@ -84,34 +84,31 @@ export default function RaTree({ data, onSelectNode, selectedNodeId }) {
     node.append('rect')
       .attr('width', nodeWidth)
       .attr('height', nodeHeight)
-      .attr('rx', 8)
-      .attr('ry', 8)
+      .attr('rx', 7)
+      .attr('ry', 7)
       .attr('fill', d => {
         const conf = OP_COLORS[d.data.op_symbol] || OP_COLORS['R'];
         return conf.bg;
       })
       .attr('stroke', d => {
         const conf = OP_COLORS[d.data.op_symbol] || OP_COLORS['R'];
-        return d.data.id === selectedNodeId ? '#065f46' : conf.border;
+        return d.data.id === selectedNodeId ? '#087F5B' : conf.border;
       })
-      .attr('stroke-width', d => (d.data.id === selectedNodeId ? 2.5 : 1.2))
-      .style('filter', d => {
-        return d.data.id === selectedNodeId
-          ? 'drop-shadow(0 4px 12px rgba(6, 95, 70, 0.25))'
-          : 'drop-shadow(0 1px 3px rgba(0, 0, 0, 0.05))';
-      });
+      .attr('stroke-width', d => (d.data.id === selectedNodeId ? 2 : 1))
+      .style('filter', 'drop-shadow(0 1px 2px rgba(16, 24, 40, 0.04))');
 
     // Operator Symbol text in center top
     node.append('text')
       .attr('x', nodeWidth / 2)
-      .attr('y', 24)
+      .attr('y', 25)
       .attr('text-anchor', 'middle')
       .attr('fill', d => {
         const conf = OP_COLORS[d.data.op_symbol] || OP_COLORS['R'];
-        return conf.text;
+        return conf.symbol;
       })
       .attr('font-size', '17px')
-      .attr('font-weight', '700')
+      .attr('font-weight', '600')
+      .attr('font-family', 'var(--font-mono)')
       .text(d => {
         if (d.data.op_symbol === 'R') {
           return d.data.details || 'Relation';
@@ -122,29 +119,29 @@ export default function RaTree({ data, onSelectNode, selectedNodeId }) {
     // Subtitle / Expression details below symbol
     node.append('text')
       .attr('x', nodeWidth / 2)
-      .attr('y', 44)
+      .attr('y', 45)
       .attr('text-anchor', 'middle')
       .attr('fill', d => {
         const conf = OP_COLORS[d.data.op_symbol] || OP_COLORS['R'];
         return conf.label;
       })
-      .attr('font-size', '11px')
+      .attr('font-size', '11.5px')
+      .attr('font-weight', '500')
       .attr('font-family', 'var(--font-mono)')
       .text(d => {
         if (d.data.op_symbol === 'R') {
-          // If there's an alias or condition
           return d.data.condition ? `AS ${d.data.condition}` : '';
         }
         const text = d.data.details || d.data.condition || '';
         return text.length > 22 ? text.substring(0, 20) + '…' : text;
       });
 
-    // Initial centering of tree
+    // Initial centering of tree with comfortable vertical headroom
     const bounds = g.node().getBBox();
     const midX = bounds.x + bounds.width / 2;
     const initialTransform = d3.zoomIdentity
-      .translate(width / 2 - midX, 35)
-      .scale(0.9);
+      .translate(width / 2 - midX, 32)
+      .scale(0.88);
 
     svg.call(zoom.transform, initialTransform);
   }, [data, selectedNodeId]);
@@ -171,8 +168,8 @@ export default function RaTree({ data, onSelectNode, selectedNodeId }) {
       const bounds = g.node().getBBox();
       const midX = bounds.x + bounds.width / 2;
       const initialTransform = d3.zoomIdentity
-        .translate(width / 2 - midX, 35)
-        .scale(0.9);
+        .translate(width / 2 - midX, 32)
+        .scale(0.88);
       svg.transition().duration(250).call(zoomBehaviorRef.current.transform, initialTransform);
     }
   };
@@ -184,7 +181,7 @@ export default function RaTree({ data, onSelectNode, selectedNodeId }) {
         style={{ width: '100%', height: '100%', display: 'block', background: '#ffffff' }}
       />
 
-      {/* Floating Zoom Controls at Bottom Right */}
+      {/* Floating Zoom Controls: Compact Control Group */}
       <div
         style={{
           position: 'absolute',
@@ -192,12 +189,12 @@ export default function RaTree({ data, onSelectNode, selectedNodeId }) {
           right: '12px',
           display: 'flex',
           alignItems: 'center',
-          gap: '4px',
+          height: '32px',
           background: '#ffffff',
-          padding: '4px 6px',
-          borderRadius: 'var(--radius-sm)',
+          borderRadius: '6px',
           border: '1px solid var(--border-color)',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)'
+          boxShadow: 'var(--shadow-subtle)',
+          overflow: 'hidden'
         }}
       >
         <button
@@ -206,17 +203,19 @@ export default function RaTree({ data, onSelectNode, selectedNodeId }) {
           style={{
             background: 'transparent',
             border: 'none',
-            color: 'var(--text-secondary)',
+            borderRight: '1px solid var(--border-color)',
+            color: 'var(--text-muted)',
             cursor: 'pointer',
-            padding: '4px',
-            borderRadius: '3px',
+            padding: '0 8px',
+            height: '100%',
             display: 'flex',
-            alignItems: 'center'
+            alignItems: 'center',
+            justifyContent: 'center'
           }}
-          onMouseEnter={e => e.currentTarget.style.color = '#0f172a'}
-          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
+          onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
         >
-          <ZoomOut size={14} />
+          <ZoomOut size={13} />
         </button>
         <button
           onClick={handleZoomIn}
@@ -224,17 +223,19 @@ export default function RaTree({ data, onSelectNode, selectedNodeId }) {
           style={{
             background: 'transparent',
             border: 'none',
-            color: 'var(--text-secondary)',
+            borderRight: '1px solid var(--border-color)',
+            color: 'var(--text-muted)',
             cursor: 'pointer',
-            padding: '4px',
-            borderRadius: '3px',
+            padding: '0 8px',
+            height: '100%',
             display: 'flex',
-            alignItems: 'center'
+            alignItems: 'center',
+            justifyContent: 'center'
           }}
-          onMouseEnter={e => e.currentTarget.style.color = '#0f172a'}
-          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
+          onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
         >
-          <ZoomIn size={14} />
+          <ZoomIn size={13} />
         </button>
         <button
           onClick={handleResetZoom}
@@ -242,17 +243,18 @@ export default function RaTree({ data, onSelectNode, selectedNodeId }) {
           style={{
             background: 'transparent',
             border: 'none',
-            color: 'var(--text-secondary)',
+            color: 'var(--text-muted)',
             cursor: 'pointer',
-            padding: '4px',
-            borderRadius: '3px',
+            padding: '0 8px',
+            height: '100%',
             display: 'flex',
-            alignItems: 'center'
+            alignItems: 'center',
+            justifyContent: 'center'
           }}
-          onMouseEnter={e => e.currentTarget.style.color = '#0f172a'}
-          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
+          onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
         >
-          <RotateCcw size={13} />
+          <RotateCcw size={12} />
         </button>
       </div>
     </div>

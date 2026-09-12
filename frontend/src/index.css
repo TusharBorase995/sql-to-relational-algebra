@@ -1,48 +1,49 @@
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,450;0,500;0,600;1,400&display=swap');
 
 :root {
-  /* Minimalist Crisp White Theme */
-  --bg-app: #f8fafc;
+  /* Surface System */
+  --bg-app: #ffffff;
   --bg-surface: #ffffff;
-  --bg-card: #ffffff;
-  --bg-card-hover: #f1f5f9;
-  --bg-muted: #f1f5f9;
-  --border-color: #e2e8f0;
-  --border-subtle: #eaecf0;
-  --border-focus: #059669;
+  --bg-secondary: #f8fafc;
+  --bg-code: #fbfcfd;
 
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
+  /* Border System */
+  --border-color: #e4e7ec;
+  --border-strong: #d0d5dd;
+  --border-focus: #087f5b;
 
-  /* Forest Green Brand Accent */
-  --primary: #065f46;
-  --primary-hover: #047857;
+  /* Typography Colors */
+  --text-primary: #101828;
+  --text-secondary: #475467;
+  --text-muted: #667085;
+
+  /* Green Identity & Action System */
+  --primary: #087f5b;
+  --primary-dark: #066a4d;
   --primary-light: #ecfdf5;
-  --primary-border: #a7f3d0;
+  --primary-border: #a7e3cf;
+  --primary-text: #075e45;
 
-  --emerald: #10b981;
-  --emerald-light: #ecfdf5;
+  /* Status Colors */
+  --error: #d92d20;
+  --error-light: #fef3f2;
+  --error-border: #fecdca;
 
-  --rose: #ef4444;
-  --rose-light: #fef2f2;
-  --rose-border: #fecaca;
+  --warning: #b54708;
+  --warning-light: #fffaeb;
 
-  --amber: #f59e0b;
-  --amber-light: #fffbeb;
+  /* Standard Fonts */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
-  --sky: #0284c7;
-  --sky-light: #f0f9ff;
+  /* Standardized Border Radius */
+  --radius-container: 8px;
+  --radius-button: 7px;
+  --radius-input: 7px;
+  --radius-pill: 999px;
 
-  --purple: #7c3aed;
-  --purple-light: #f5f3ff;
-
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'Fira Code', 'Cascadia Code', Menlo, monospace;
-
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  /* Controlled Shadow */
+  --shadow-subtle: 0 1px 2px rgba(16, 24, 40, 0.04);
 }
 
 * {
@@ -61,57 +62,78 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Custom Minimalist Scrollbars */
+/* Minimalist Clean Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
+  background: #d0d5dd;
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #98a2b3;
 }
 
-/* CodeMirror Light Theme Customization */
+/* CodeMirror JetBrains Mono Setup */
 .cm-editor {
   height: 100% !important;
   font-family: var(--font-mono) !important;
-  font-size: 13.5px;
-  background-color: #ffffff !important;
-  color: #0f172a !important;
+  font-size: 14px !important;
+  font-weight: 450 !important;
+  background-color: var(--bg-code) !important;
+  color: var(--text-primary) !important;
 }
 .cm-scroller {
   font-family: var(--font-mono) !important;
 }
 .cm-gutters {
-  background-color: #fafbfc !important;
-  border-right: 1px solid #e2e8f0 !important;
-  color: #94a3b8 !important;
+  background-color: #f8fafc !important;
+  border-right: 1px solid var(--border-color) !important;
+  color: #98a2b3 !important;
+  font-family: var(--font-mono) !important;
+  font-size: 12.5px !important;
 }
 .cm-activeLineGutter {
   background-color: #f1f5f9 !important;
-  color: #0f172a !important;
+  color: var(--text-primary) !important;
 }
 .cm-activeLine {
-  background-color: #f8fafc !important;
+  background-color: rgba(248, 250, 252, 0.8) !important;
 }
 .cm-selectionBackground, ::selection {
-  background-color: #bfdbfe !important;
+  background-color: #d1e9ff !important;
 }
 
-/* Error Underline Marker in CodeMirror */
+/* Specific SQL Syntax Highlighting Overrides */
+.cm-editor .tok-keyword {
+  color: #2563eb !important;
+  font-weight: 600 !important;
+}
+.cm-editor .tok-number {
+  color: #c2410c !important;
+}
+.cm-editor .tok-operator {
+  color: #667085 !important;
+}
+.cm-editor .tok-string {
+  color: #087f5b !important;
+}
+.cm-editor .tok-variableName {
+  color: #344054 !important;
+}
+
+/* Error Marker in CodeMirror */
 .cm-error-line {
   background: #fef2f2 !important;
 }
 .cm-error-text {
-  text-decoration: underline wavy #ef4444 !important;
+  text-decoration: underline wavy #d92d20 !important;
   font-weight: 600;
-  color: #dc2626 !important;
+  color: #b42318 !important;
 }
 
 @keyframes fadeIn {
@@ -130,13 +152,4 @@ body {
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
-}
-
-/* D3 Tree Node Interactive Styling */
-.tree-node-card {
-  cursor: pointer;
-  transition: transform 0.15s ease, filter 0.15s ease;
-}
-.tree-node-card:hover {
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.08));
 }

@@ -58,6 +58,59 @@ export default function SchemaManager({
   const [jsonText, setJsonText] = useState('');
   const [jsonError, setJsonError] = useState(null);
   const [copied, setCopied] = useState(false);
+  // Resizable Columns State
+  const [tableListWidth, setTableListWidth] = useState(240);
+  const [isDraggingCol1, setIsDraggingCol1] = useState(false);
+  const [colDefWidth, setColDefWidth] = useState(450);
+  const [isDraggingCol2, setIsDraggingCol2] = useState(false);
+
+  // Drag handler for Column 1 (Tables List)
+  const handleStartDragCol1 = (e) => {
+    e.preventDefault();
+    setIsDraggingCol1(true);
+    const startX = e.clientX;
+    const startWidth = tableListWidth;
+
+    const onMouseMove = (moveEvent) => {
+      const delta = moveEvent.clientX - startX;
+      const maxW = window.innerWidth - 350;
+      const newW = Math.max(160, Math.min(maxW, startWidth + delta));
+      setTableListWidth(newW);
+    };
+
+    const onMouseUp = () => {
+      setIsDraggingCol1(false);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  };
+
+  // Drag handler for Column 2 (Table Definition / Columns)
+  const handleStartDragCol2 = (e) => {
+    e.preventDefault();
+    setIsDraggingCol2(true);
+    const startX = e.clientX;
+    const startWidth = colDefWidth;
+
+    const onMouseMove = (moveEvent) => {
+      const delta = moveEvent.clientX - startX;
+      const maxW = window.innerWidth - tableListWidth - 250;
+      const newW = Math.max(220, Math.min(maxW, startWidth + delta));
+      setColDefWidth(newW);
+    };
+
+    const onMouseUp = () => {
+      setIsDraggingCol2(false);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  };
 
   // Active table
   const activeTable = tables.find(t => t.name === selectedTableName) || tables[0] || null;
@@ -363,14 +416,25 @@ export default function SchemaManager({
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#ffffff', overflow: 'hidden' }}>
       {/* 3-Column Split Layout */}
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '240px 1.4fr 1.6fr', height: '100%', overflow: 'hidden' }}>
-        
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'row',
+          height: '100%',
+          overflow: 'hidden',
+          userSelect: (isDraggingCol1 || isDraggingCol2) ? 'none' : 'auto',
+          cursor: (isDraggingCol1 || isDraggingCol2) ? 'col-resize' : 'auto'
+        }}
+      >
         {/* ======================================================== */}
         {/* COLUMN 1: Tables List */}
         {/* ======================================================== */}
         <div
           style={{
-            borderRight: '1px solid var(--border-color)',
+            width: `${tableListWidth}px`,
+            minWidth: '160px',
+            flexShrink: 0,
             display: 'flex',
             flexDirection: 'column',
             background: '#ffffff',
@@ -487,10 +551,13 @@ export default function SchemaManager({
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       fontFamily: 'var(--font-mono)',
-                      background: isSelected ? 'var(--primary-light)' : 'transparent',
-                      color: isSelected ? 'var(--primary)' : 'var(--text-primary)',
+                      background: isSelected ? '#ECFDF5' : 'transparent',
+                      color: isSelected ? '#075E45' : 'var(--text-primary)',
                       fontWeight: isSelected ? '600' : '400',
-                      border: isSelected ? '1px solid var(--primary-border)' : '1px solid transparent',
+                      borderLeft: isSelected ? '3px solid #087F5B' : '3px solid transparent',
+                      borderTop: '1px solid transparent',
+                      borderRight: '1px solid transparent',
+                      borderBottom: '1px solid transparent',
                       transition: 'all 0.12s ease'
                     }}
                     onMouseEnter={e => !isSelected && (e.currentTarget.style.background = '#f8fafc')}
@@ -501,8 +568,16 @@ export default function SchemaManager({
                     </span>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '11px', color: isSelected ? 'var(--primary)' : 'var(--text-muted)' }}>
-                        {tbl.columns?.length || 0}c
+                      <span
+                        style={{
+                          fontSize: '11px',
+                          padding: '1px 6px',
+                          borderRadius: '999px',
+                          background: isSelected ? '#d1fae5' : '#f2f4f7',
+                          color: isSelected ? '#075e45' : '#667085'
+                        }}
+                      >
+                        {tbl.columns?.length || 0} cols
                       </span>
                       <button
                         onClick={(e) => handleDeleteTable(tbl.name, e)}
@@ -528,76 +603,81 @@ export default function SchemaManager({
             )}
           </div>
 
-          {/* Bottom Actions: Load Mock Data, JSON, Reset */}
-          <div style={{ padding: '8px 10px', borderTop: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '4px', background: '#fafbfc' }}>
+          {/* Bottom Actions: JSON, Reset */}
+          <div style={{ padding: '8px 10px', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '6px', background: '#fafbfc' }}>
             <button
-              onClick={onLoadMockData}
-              title="Load demo sample tables (students, departments, courses, enrollments)"
+              onClick={handleOpenJson}
+              title="View or edit raw JSON schema"
               style={{
-                width: '100%',
+                flex: 1,
                 padding: '4px 6px',
                 borderRadius: '4px',
                 fontSize: '11px',
                 background: '#ffffff',
-                border: '1px solid #a7f3d0',
-                color: '#065f46',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-secondary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '4px',
-                cursor: 'pointer',
-                fontWeight: '500'
+                cursor: 'pointer'
               }}
             >
-              <Sparkles size={12} />
-              <span>Load Mock Data</span>
+              <Code size={11} />
+              <span>JSON</span>
             </button>
-
-            <div style={{ display: 'flex', gap: '4px' }}>
-              <button
-                onClick={handleOpenJson}
-                title="View or edit raw JSON schema"
-                style={{
-                  flex: 1,
-                  padding: '3px 6px',
-                  borderRadius: '4px',
-                  fontSize: '11px',
-                  background: '#ffffff',
-                  border: '1px solid var(--border-color)',
-                  color: 'var(--text-secondary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                <Code size={11} />
-                <span>JSON</span>
-              </button>
-              <button
-                onClick={handleClearAll}
-                title="Clear all tables"
-                style={{
-                  flex: 1,
-                  padding: '3px 6px',
-                  borderRadius: '4px',
-                  fontSize: '11px',
-                  background: '#ffffff',
-                  border: '1px solid var(--border-color)',
-                  color: 'var(--text-secondary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                <RotateCcw size={11} />
-                <span>Reset</span>
-              </button>
-            </div>
+            <button
+              onClick={handleClearAll}
+              title="Clear all tables"
+              style={{
+                flex: 1,
+                padding: '4px 6px',
+                borderRadius: '4px',
+                fontSize: '11px',
+                background: '#ffffff',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-secondary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              <RotateCcw size={11} />
+              <span>Reset</span>
+            </button>
           </div>
+        </div>
+
+        {/* VERTICAL RESIZER BAR 1: Tables List Splitter */}
+        <div
+          onMouseDown={handleStartDragCol1}
+          title="Drag to resize Tables list width"
+          style={{
+            width: '6px',
+            cursor: 'col-resize',
+            background: isDraggingCol1 ? 'var(--primary-light)' : '#f8fafc',
+            borderLeft: '1px solid var(--border-color)',
+            borderRight: '1px solid var(--border-color)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'background 0.15s ease',
+            flexShrink: 0,
+            zIndex: 10
+          }}
+          onMouseEnter={e => !isDraggingCol1 && (e.currentTarget.style.background = '#e2e8f0')}
+          onMouseLeave={e => !isDraggingCol1 && (e.currentTarget.style.background = '#f8fafc')}
+        >
+          <div
+            style={{
+              width: '2px',
+              height: '24px',
+              borderRadius: '2px',
+              background: isDraggingCol1 ? 'var(--primary)' : '#94a3b8'
+            }}
+          />
         </div>
 
         {/* ======================================================== */}
@@ -605,7 +685,9 @@ export default function SchemaManager({
         {/* ======================================================== */}
         <div
           style={{
-            borderRight: '1px solid var(--border-color)',
+            width: `${colDefWidth}px`,
+            minWidth: '220px',
+            flexShrink: 0,
             display: 'flex',
             flexDirection: 'column',
             background: '#ffffff',
@@ -1014,11 +1096,43 @@ export default function SchemaManager({
           )}
         </div>
 
+        {/* VERTICAL RESIZER BAR 2: Table Definition Splitter */}
+        <div
+          onMouseDown={handleStartDragCol2}
+          title="Drag to resize Table Definition width"
+          style={{
+            width: '6px',
+            cursor: 'col-resize',
+            background: isDraggingCol2 ? 'var(--primary-light)' : '#f8fafc',
+            borderLeft: '1px solid var(--border-color)',
+            borderRight: '1px solid var(--border-color)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'background 0.15s ease',
+            flexShrink: 0,
+            zIndex: 10
+          }}
+          onMouseEnter={e => !isDraggingCol2 && (e.currentTarget.style.background = '#e2e8f0')}
+          onMouseLeave={e => !isDraggingCol2 && (e.currentTarget.style.background = '#f8fafc')}
+        >
+          <div
+            style={{
+              width: '2px',
+              height: '24px',
+              borderRadius: '2px',
+              background: isDraggingCol2 ? 'var(--primary)' : '#94a3b8'
+            }}
+          />
+        </div>
+
         {/* ======================================================== */}
         {/* COLUMN 3: Sample Rows (Optional & Fully Editable) */}
         {/* ======================================================== */}
         <div
           style={{
+            flex: 1,
+            minWidth: '240px',
             display: 'flex',
             flexDirection: 'column',
             background: '#ffffff',
@@ -1466,7 +1580,7 @@ export default function SchemaManager({
                   gap: '4px',
                   background: 'transparent',
                   border: 'none',
-                  color: copied ? 'var(--emerald)' : 'var(--text-secondary)',
+                  color: copied ? 'var(--primary)' : 'var(--text-secondary)',
                   cursor: 'pointer',
                   fontSize: '12px'
                 }}
@@ -1493,7 +1607,7 @@ export default function SchemaManager({
             />
 
             {jsonError && (
-              <div style={{ color: 'var(--rose)', fontSize: '11px', marginTop: '6px' }}>
+              <div style={{ color: 'var(--error)', fontSize: '11px', marginTop: '6px' }}>
                 {jsonError}
               </div>
             )}
