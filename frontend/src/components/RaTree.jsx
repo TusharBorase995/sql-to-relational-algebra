@@ -16,6 +16,53 @@ const OP_COLORS = {
   'R': { bg: '#F8FAFC', border: '#E4E7EC', symbol: '#101828', label: '#475467' }  // Base Relation
 };
 
+function cleanCondition(cond) {
+  if (!cond) return '';
+  let c = cond.trim();
+  if (c.startsWith('(') && c.endsWith(')')) {
+    let depth = 0;
+    let wraps = true;
+    for (let i = 0; i < c.length - 1; i++) {
+      if (c[i] === '(') depth++;
+      else if (c[i] === ')') depth--;
+      if (depth === 0) {
+        wraps = false;
+        break;
+      }
+    }
+    if (wraps) c = c.slice(1, -1).trim();
+  }
+  return c;
+}
+
+function getNodeSubtitle(d) {
+  const data = d.data;
+  if (!data) return '';
+  if (data.op_symbol === 'R') {
+    return '';
+  }
+  if (data.op_symbol === 'π') {
+    return data.details || '';
+  }
+  if (data.op_symbol === 'σ') {
+    return cleanCondition(data.condition || data.details || '');
+  }
+  if (data.op_symbol === '⋈') {
+    const raw = data.condition || (data.details ? data.details.replace(/^.*?ON\s*/i, '') : '');
+    return cleanCondition(raw);
+  }
+  if (data.op_symbol === 'γ') {
+    return data.details || '';
+  }
+  if (data.op_symbol === 'τ') {
+    return data.details || '';
+  }
+  if (data.op_symbol === 'δ') {
+    return '';
+  }
+  return cleanCondition(data.condition || data.details || '');
+}
+
 export default function RaTree({ data, onSelectNode, selectedNodeId }) {
   const svgRef = useRef(null);
   const containerRef = useRef(null);
@@ -34,7 +81,7 @@ export default function RaTree({ data, onSelectNode, selectedNodeId }) {
     const g = svg.append('g').attr('class', 'main-tree-group');
 
     const zoom = d3.zoom()
-      .scaleExtent([0.25, 2.5])
+      .scaleExtent([0.2, 2.5])
       .on('zoom', (event) => {
         g.attr('transform', event.transform);
       });
@@ -45,8 +92,8 @@ export default function RaTree({ data, onSelectNode, selectedNodeId }) {
     // Setup hierarchy layout
     const root = d3.hierarchy(data, d => d.children);
 
-    const nodeWidth = 168;
-    const nodeHeight = 64;
+    const nodeWidth = 176;
+    const nodeHeight = 62;
     const treeLayout = d3.tree().nodeSize([nodeWidth + 36, nodeHeight + 46]);
 
     treeLayout(root);
@@ -80,6 +127,13 @@ export default function RaTree({ data, onSelectNode, selectedNodeId }) {
         if (onSelectNode) onSelectNode(d.data);
       });
 
+    // Tooltip for full text on hover
+    node.append('title').text(d => {
+      const sub = getNodeSubtitle(d);
+      if (d.data.op_symbol === 'R') return d.data.details || 'Relation';
+      return `${d.data.op_name} (${d.data.op_symbol})${sub ? ': ' + sub : ''}`;
+    });
+
     // Node Card Background
     node.append('rect')
       .attr('width', nodeWidth)
@@ -100,13 +154,13 @@ export default function RaTree({ data, onSelectNode, selectedNodeId }) {
     // Operator Symbol text in center top
     node.append('text')
       .attr('x', nodeWidth / 2)
-      .attr('y', 25)
+      .attr('y', d => (d.data.op_symbol === 'R' ? 36 : 25))
       .attr('text-anchor', 'middle')
       .attr('fill', d => {
         const conf = OP_COLORS[d.data.op_symbol] || OP_COLORS['R'];
         return conf.symbol;
       })
-      .attr('font-size', '17px')
+      .attr('font-size', d => (d.data.op_symbol === 'R' ? '13.5px' : '18px'))
       .attr('font-weight', '600')
       .attr('font-family', 'var(--font-mono)')
       .text(d => {
@@ -119,7 +173,7 @@ export default function RaTree({ data, onSelectNode, selectedNodeId }) {
     // Subtitle / Expression details below symbol
     node.append('text')
       .attr('x', nodeWidth / 2)
-      .attr('y', 45)
+      .attr('y', 46)
       .attr('text-anchor', 'middle')
       .attr('fill', d => {
         const conf = OP_COLORS[d.data.op_symbol] || OP_COLORS['R'];
@@ -129,19 +183,22 @@ export default function RaTree({ data, onSelectNode, selectedNodeId }) {
       .attr('font-weight', '500')
       .attr('font-family', 'var(--font-mono)')
       .text(d => {
-        if (d.data.op_symbol === 'R') {
-          return d.data.condition ? `AS ${d.data.condition}` : '';
-        }
-        const text = d.data.details || d.data.condition || '';
-        return text.length > 22 ? text.substring(0, 20) + '…' : text;
+        const sub = getNodeSubtitle(d);
+        if (!sub) return '';
+        return sub.length > 25 ? sub.substring(0, 23) + '…' : sub;
       });
 
-    // Initial centering of tree with comfortable vertical headroom
+    // Initial centering & auto-scaling to prevent nodes from being clipped by bottom boundary
     const bounds = g.node().getBBox();
+    const treeW = Math.max(bounds.width, 100);
+    const treeH = Math.max(bounds.height, 100);
+    const scaleX = (width - 48) / treeW;
+    const scaleY = (height - 64) / treeH;
+    const fitScale = Math.min(1.0, Math.max(0.42, Math.min(scaleX, scaleY)));
     const midX = bounds.x + bounds.width / 2;
     const initialTransform = d3.zoomIdentity
-      .translate(width / 2 - midX, 32)
-      .scale(0.88);
+      .translate(width / 2 - midX * fitScale, 24)
+      .scale(fitScale);
 
     svg.call(zoom.transform, initialTransform);
   }, [data, selectedNodeId]);
@@ -165,11 +222,17 @@ export default function RaTree({ data, onSelectNode, selectedNodeId }) {
       const g = svg.select('.main-tree-group');
       if (!g.node()) return;
       const width = containerRef.current.clientWidth || 700;
+      const height = containerRef.current.clientHeight || 450;
       const bounds = g.node().getBBox();
+      const treeW = Math.max(bounds.width, 100);
+      const treeH = Math.max(bounds.height, 100);
+      const scaleX = (width - 48) / treeW;
+      const scaleY = (height - 64) / treeH;
+      const fitScale = Math.min(1.0, Math.max(0.42, Math.min(scaleX, scaleY)));
       const midX = bounds.x + bounds.width / 2;
       const initialTransform = d3.zoomIdentity
-        .translate(width / 2 - midX, 32)
-        .scale(0.88);
+        .translate(width / 2 - midX * fitScale, 24)
+        .scale(fitScale);
       svg.transition().duration(250).call(zoomBehaviorRef.current.transform, initialTransform);
     }
   };

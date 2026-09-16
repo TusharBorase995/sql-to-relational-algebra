@@ -20,6 +20,7 @@ import RaTree from './components/RaTree';
 import TokenTable from './components/TokenTable';
 import SchemaManager from './components/SchemaManager';
 import NodeInspector from './components/NodeInspector';
+import RaFormula, { formatRaTreeToPlainText } from './components/RaFormula';
 
 const DEFAULT_SQL = `SELECT s.name, d.name
 FROM students s, departments d
@@ -186,12 +187,10 @@ export default function App() {
   };
 
   const handleCopyLinearFormula = () => {
-    const formula = viewMode === 'optimized'
-      ? result?.ra_string_optimized
-      : result?.ra_string_unoptimized;
+    const textToCopy = formatRaTreeToPlainText(currentRaTree, currentLinearStr);
 
-    if (formula) {
-      navigator.clipboard.writeText(formula);
+    if (textToCopy) {
+      navigator.clipboard.writeText(textToCopy);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -651,19 +650,7 @@ export default function App() {
               <div style={{ fontWeight: '600', fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 RELATIONAL ALGEBRA
               </div>
-              <div
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '14.5px',
-                  fontWeight: '500',
-                  color: '#101828',
-                  lineHeight: '1.5',
-                  wordBreak: 'break-word',
-                  whiteSpace: 'normal'
-                }}
-              >
-                {currentLinearStr || '—'}
-              </div>
+              <RaFormula tree={currentRaTree} rawString={currentLinearStr} />
             </div>
 
             <button

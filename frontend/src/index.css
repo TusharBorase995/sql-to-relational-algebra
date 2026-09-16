@@ -153,3 +153,27 @@ body {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* Relational Algebra Formula Auto-Wrapping */
+.ra-formula-wrap {
+  white-space: normal !important;
+  word-break: break-word !important;
+  overflow-wrap: anywhere !important;
+}
+
+.ra-formula-wrap .katex {
+  white-space: normal !important;
+  line-height: 1.8 !important;
+  font-size: 1.05em;
+}
+
+.ra-formula-wrap .katex-html {
+  white-space: normal !important;
+  display: inline !important;
+}
+
+.ra-formula-wrap .katex .base {
+  white-space: normal !important;
+  display: inline !important;
+  word-break: break-word !important;
+}
