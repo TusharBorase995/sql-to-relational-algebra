@@ -6,8 +6,9 @@ const fs = require('fs');
 const os = require('os');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
-const BINARY_PATH = path.resolve(__dirname, '../compiler/bin/sql2ra.exe');
+const BINARY_FILENAME = process.platform === 'win32' ? 'sql2ra.exe' : 'sql2ra';
+const BINARY_PATH = process.env.SQL2RA_BIN || path.resolve(__dirname, '../compiler/bin', BINARY_FILENAME);
+
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
@@ -314,6 +315,18 @@ app.post('/api/compile', (req, res) => {
   child.stdin.end();
 });
 
+// Serve production static frontend if dist directory exists
+const FRONTEND_DIST = path.resolve(__dirname, '../frontend/dist');
+if (fs.existsSync(FRONTEND_DIST)) {
+  app.use(express.static(FRONTEND_DIST));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(FRONTEND_DIST, 'index.html'));
+  });
+}
+
 app.listen(PORT, () => {
   console.log(`SQL-to-RA Compiler Backend running on http://localhost:${PORT}`);
+  console.log(`Using compiler binary at: ${BINARY_PATH}`);
 });
+

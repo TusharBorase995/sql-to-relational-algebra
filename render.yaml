@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: sql-to-relational-algebra
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: NODE_ENV
+        value: production

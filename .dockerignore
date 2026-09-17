@@ -1,0 +1,12 @@
+.git
+.gitignore
+.vscode
+.idea
+**/node_modules
+tools
+compiler/bin/*.exe
+compiler/src/parser.output
+*.log
+Thumbs.db
+.DS_Store
+*.bat
