@@ -6,8 +6,10 @@ const fs = require('fs');
 const os = require('os');
 
 const app = express();
+const PORT = process.env.PORT || 5000;
 const BINARY_FILENAME = process.platform === 'win32' ? 'sql2ra.exe' : 'sql2ra';
 const BINARY_PATH = process.env.SQL2RA_BIN || path.resolve(__dirname, '../compiler/bin', BINARY_FILENAME);
+
 
 
 app.use(cors());
