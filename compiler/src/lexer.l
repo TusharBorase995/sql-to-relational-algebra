@@ -5,6 +5,8 @@
 #ifndef fileno
 #define fileno _fileno
 #endif
+#else
+#include <unistd.h>
 #endif
 
 #include <cstdio>
@@ -52,6 +54,7 @@ static int record_tok(int token_type, const char* name, const char* lex) {
 %option noyywrap
 %option yylineno
 %option case-insensitive
+%option never-interactive
 %option nounistd
 
 %%

@@ -12,26 +12,29 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /build/compiler
 COPY compiler/ .
 
-# Ensure clean build with Linux flex/bison and g++
-RUN make clean || true
-RUN make
+# Direct build with flex, bison, and g++ (eliminates make tab issues)
+RUN mkdir -p bin && \
+    bison -d -v -o src/parser.tab.cpp src/parser.y && \
+    flex -o src/lex.yy.cpp src/lexer.l && \
+    g++ -std=gnu++14 -O2 -Isrc src/parser.tab.cpp src/lex.yy.cpp src/ast.cpp src/schema.cpp src/ra.cpp src/optimizer.cpp src/main.cpp -o bin/sql2ra
 
 # ==========================================
 # Stage 2: Build the React Frontend
 # ==========================================
-FROM node:20-slim AS frontend-builder
+FROM node:22-slim AS frontend-builder
 
 WORKDIR /build/frontend
 COPY frontend/package*.json ./
 RUN npm ci
 
 COPY frontend/ .
+ENV NODE_OPTIONS="--max-old-space-size=400"
 RUN npm run build
 
 # ==========================================
 # Stage 3: Unified Production Runtime
 # ==========================================
-FROM node:20-slim AS runner
+FROM node:22-slim AS runner
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libstdc++6 \
