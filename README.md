@@ -1,227 +1,270 @@
-# Web-Based SQL-to-Relational-Algebra Compiler
+# SQL-to-Relational-Algebra (sql2ra)
 
-A complete, end-to-end SQL-to-Relational-Algebra compiler suite for a **Compiler Design** course project. Built with classic **Flex (.l)** and **Bison (.y)** compiled to a high-performance C++ binary, wrapped by a **Node.js/Express** backend, and visualized through a modern **React + CodeMirror + D3.js** web interface.
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://sql-to-relational-algebra.onrender.com/)
+[![C++](https://img.shields.io/badge/C%2B%2B-14-00599C?style=for-the-badge&logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
+[![Flex & Bison](https://img.shields.io/badge/Parser-Flex%20%26%20Bison-orange?style=for-the-badge)](https://www.gnu.org/software/bison/)
+[![Node.js](https://img.shields.io/badge/Backend-Node.js%20Express-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![React](https://img.shields.io/badge/Frontend-React%2019%20%2B%20Vite-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![Docker](https://img.shields.io/badge/Deployment-Docker%20Multi--Stage-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+
+A full-stack query compiler and visual optimizer that translates complex SQL queries into Relational Algebra expressions and interactive evaluation trees. Built with a native **Flex & Bison** LALR(1) compiler pipeline in C++, wrapped by an **Express API**, and rendered with **React 19**, **CodeMirror 6**, and **D3.js**.
+
+🌐 **Live Application**: [https://sql-to-relational-algebra.onrender.com/](https://sql-to-relational-algebra.onrender.com/)
 
 ---
 
-## Architecture Overview
+## Key Features
+
+- **LALR(1) SQL Parsing**: Full lexical analysis and syntax checking via GNU Flex and Bison with exact line/column error tracking.
+- **Relational Algebra Translator**: Converts parsed AST nodes into canonical algebraic operator trees ($\pi, \sigma, \bowtie, \times, \gamma, \tau, \delta, \cup, \cap, -$).
+- **Rule-Based Query Optimizer**:
+  - Pushes selections ($\sigma$) below Cartesian products and joins.
+  - Converts Cartesian products ($R \times S$) into Theta Joins ($R \bowtie_\theta S$) when join conditions exist.
+  - Merges cascaded selections ($\sigma_{c1}(\sigma_{c2}(R)) \to \sigma_{c1 \land c2}(R)$).
+  - Pushes projections ($\pi$) downward to prune unnecessary attributes early.
+- **Side-by-Side Tree Visualization**: Interactive D3.js hierarchical tree comparison between **Canonical (Unoptimized)** and **Optimized** execution plans.
+- **Mathematical Formula Representation**: LaTeX-rendered and linear mathematical strings with one-click copy.
+- **Custom Schema Manager & Browser**: Inspect preloaded tables or define custom relational schemas with live foreign-key validation.
+- **Token Stream Inspector**: Full inspection of lexical tokens emitted by Flex with source position offsets.
+
+---
+
+## Architecture
 
 ```
-                   ┌────────────────────────────────────────┐
-                   │          Web Browser (Client)          │
-                   │  React + CodeMirror 6 + D3.js Tree UI  │
-                   └───────────────────▲────────────────────┘
-                                       │ HTTP / JSON
-                                       ▼
-                   ┌────────────────────────────────────────┐
-                   │       Node.js / Express Backend        │
-                   │    POST /api/compile  |  GET /api/...  │
-                   └───────────────────▲────────────────────┘
-                                       │ stdin (SQL) / stdout (JSON)
-                                       ▼
-                   ┌────────────────────────────────────────┐
-                   │          C++ Compiler Binary           │
-                   │           (sql2ra.exe)                 │
-                   │  ┌──────────────────────────────────┐  │
-                   │  │  Flex Lexer (Line/Col Tracking)   │  │
-                   │  ├──────────────────────────────────┤  │
-                   │  │  Bison LALR(1) Parser Grammar     │  │
-                   │  ├──────────────────────────────────┤  │
-                   │  │  C++ Abstract Syntax Tree (AST)   │  │
-                   │  ├──────────────────────────────────┤  │
-                   │  │  Schema Catalog & Validator       │  │
-                   │  ├──────────────────────────────────┤  │
-                   │  │  AST-to-RA Canonical Translator   │  │
-                   │  ├──────────────────────────────────┤  │
-                   │  │  Relational Algebra Optimizer     │  │
-                   │  └──────────────────────────────────┘  │
-                   └────────────────────────────────────────┘
-```
-
----
-
-## SQL Grammar Scope (14 Features Across 3 Tiers)
-
-### Tier 1 — Core
-1. **Basic SELECT**: `SELECT col1, col2 FROM table`
-2. **SELECT \* (Wildcard projection)**: `SELECT * FROM table`
-3. **WHERE clause**: with `=`, `<`, `>`, `<=`, `>=`, `<>`, `AND`, `OR`, `NOT`
-4. **Multiple tables via comma**: implicit Cartesian join (`FROM t1, t2 WHERE t1.x = t2.y`)
-5. **DISTINCT**: duplicate elimination (`SELECT DISTINCT ...`)
-6. **INNER JOIN ... ON condition**: theta join (`FROM t1 INNER JOIN t2 ON ...`)
-
-### Tier 2 — Extended
-7. **LEFT JOIN / RIGHT JOIN ... ON condition**: outer theta joins tagged as LEFT/RIGHT
-8. **GROUP BY with Aggregate functions**: `COUNT(*)`, `COUNT(DISTINCT col)`, `SUM(col)`, `AVG(col)`, `MIN(col)`, `MAX(col)`
-9. **HAVING clause**: post-aggregation filter conditions
-10. **ORDER BY**: sorting by multiple attributes with `ASC` / `DESC`
-11. **LIKE, IN, BETWEEN**: pattern matching, set membership, and range expressions (with `NOT LIKE`, `NOT IN`, `NOT BETWEEN`)
-
-### Tier 3 — Set Operations
-12. **UNION**: set union (and `UNION ALL`, `UNION DISTINCT`)
-13. **INTERSECT**: set intersection with standard SQL precedence over UNION/EXCEPT
-14. **EXCEPT (MINUS)**: set difference
-
----
-
-## Relational Algebra Operator Mapping
-
-| SQL Clause / Feature | Relational Algebra Symbol | Operation Name | Description |
-| :--- | :---: | :--- | :--- |
-| `SELECT` columns | $\pi$ | Projection | Projects specified expressions/columns |
-| `WHERE` condition | $\sigma$ | Selection | Filters tuples satisfying condition |
-| `FROM t1, t2` | $\times$ | Cartesian Product | Cross product of unjoined tables |
-| `JOIN ... ON` | $\bowtie$ | Theta Join | Join with condition; tagged INNER/LEFT/RIGHT |
-| `GROUP BY` + Aggregates | $\gamma$ | Aggregation | Groups by attributes and computes aggregates |
-| `HAVING` condition | $\sigma$ | Selection (HAVING) | Filters aggregated groups |
-| `ORDER BY` | $\tau$ | Sort / Ordering | Orders tuples by specified keys |
-| `DISTINCT` | $\delta$ | Duplicate Elimination | Eliminates duplicate tuples |
-| `UNION` | $\cup$ | Set Union | Combines tuples from two queries |
-| `INTERSECT` | $\cap$ | Set Intersection | Retains common tuples |
-| `EXCEPT` / `MINUS` | $-$ | Set Difference | Tuples in left query not in right query |
-
----
-
-## Query Optimization Engine
-
-The optimizer implements classic heuristic query optimization rules:
-1. **Merge Cascaded Selections**: $\sigma_{c1}(\sigma_{c2}(R)) \longrightarrow \sigma_{c1 \land c2}(R)$
-2. **Push Selection Down**:
-   - Pushes predicates as close to base relations as possible.
-   - Pushes branch-specific predicates below joins to filter relations *before* joining.
-   - **Cartesian Product to Theta Join Conversion**: Identifies join predicates over $R_1 \times R_2$ and converts them to $R_1 \bowtie_{cond} R_2$.
-3. **Merge Cascaded Projections**: $\pi_{L1}(\pi_{L2}(R)) \longrightarrow \pi_{L1}(R)$
-4. **Push Projection Down**: Eliminates unnecessary attributes early before joins, pushing early $\pi$ nodes below joins.
-
-Both the **Canonical (Unoptimized)** and **Optimized** RA trees and linear formulas are produced side-by-side for comparison.
-
----
-
-## Sample Schema Catalog
-
-The system includes a pre-loaded relational database schema:
-- **`students`** (`id` INT PK, `name` VARCHAR, `age` INT, `dept_id` INT FK $\to$ `departments.id`, `gpa` FLOAT)
-- **`departments`** (`id` INT PK, `name` VARCHAR, `building` VARCHAR)
-- **`courses`** (`id` INT PK, `code` VARCHAR, `title` VARCHAR, `dept_id` INT FK $\to$ `departments.id`, `credits` INT)
-- **`enrollments`** (`student_id` INT FK $\to$ `students.id`, `course_id` INT FK $\to$ `courses.id`, `semester` VARCHAR, `grade` VARCHAR)
-
-The schema validator checks table/column existence and flags ambiguous unqualified column references in multi-table queries.
-
----
-
-## Project Structure
-
-```
-CD_project/
-├── tools/
-│   └── winflexbison/          # Portable Flex 2.6.4 & Bison 3.8.2 binaries
-├── compiler/
-│   ├── src/
-│   │   ├── lexer.l            # Flex lexer with line/col tracking & token recorder
-│   │   ├── parser.y           # Bison LALR(1) grammar for Tiers 1-3
-│   │   ├── ast.h / ast.cpp    # C++ AST node hierarchy
-│   │   ├── schema.h / schema.cpp # Schema catalog & semantic validation
-│   │   ├── ra.h / ra.cpp      # AST -> Relational Algebra translator
-│   │   ├── optimizer.h / optimizer.cpp # Selection/projection pushdown & merging
-│   │   ├── json_helper.h      # Lightweight JSON string escaping
-│   │   └── main.cpp           # CLI driver & error handler
-│   ├── build.bat              # Windows compilation script
-│   └── bin/
-│       └── sql2ra.exe         # Compiled C++ executable
-├── backend/
-│   ├── package.json
-│   └── server.js              # Express API (subprocess pipeline & endpoints)
-├── frontend/
-│   ├── package.json
-│   ├── vite.config.js         # Vite configuration with /api proxy
-│   ├── src/
-│   │   ├── App.jsx            # Main app shell & state management
-│   │   ├── index.css          # Design system & dark theme tokens
-│   │   └── components/
-│   │       ├── SqlEditor.jsx  # CodeMirror SQL editor with error markers
-│   │       ├── RaTree.jsx     # Interactive D3.js node-link tree
-│   │       ├── TokenTable.jsx # Filterable token stream panel
-│   │       ├── SchemaBrowser.jsx # Database schema inspector
-│   │       └── NodeInspector.jsx # Node details side drawer
-└── README.md
+                       ┌────────────────────────────────────────┐
+                       │          Browser Client (SPA)          │
+                       │   React 19 + CodeMirror 6 + D3.js      │
+                       └───────────────────▲────────────────────┘
+                                           │  HTTP / JSON
+                                           ▼
+                       ┌────────────────────────────────────────┐
+                       │       Node.js / Express Backend        │
+                       │     API Routing + Static Assets        │
+                       └───────────────────▲────────────────────┘
+                                           │  stdin (SQL) / stdout (JSON)
+                                           ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                                 C++ Engine (sql2ra)                                    │
+│                                                                                        │
+│  ┌───────────────────────┐      ┌────────────────────────┐      ┌───────────────────┐  │
+│  │      Flex Lexer       │ ───> │  Bison LALR(1) Parser  │ ───> │ Abstract Syntax   │  │
+│  │ (tokens, line/col)    │      │  (Grammar validation)  │      │ Tree (AST) Nodes  │  │
+│  └───────────────────────┘      └────────────────────────┘      └─────────┬─────────┘  │
+│                                                                           │            │
+│  ┌───────────────────────┐      ┌────────────────────────┐                │            │
+│  │   Heuristic Query     │ <─── │   Canonical RA Tree    │ <──────────────┘            │
+│  │  Optimizer (Pushdown) │      │  Generator (π, σ, ⋈)   │                             │
+│  └──────────┬────────────┘      └────────────────────────┘                             │
+│             │                                                                          │
+│             ▼                                                                          │
+│   JSON Serialization (AST, Token Stream, Canonical Plan, Optimized Plan, Metadata)     │
+└────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Getting Started
+## Operator Mapping Reference
 
-### Prerequisites
-- **Flex & Bison**: Included in `tools/winflexbison/` (no global installation required).
-- **C++ Compiler**: MinGW GCC 6.3+ (`g++`).
-- **Node.js**: v18+ & npm.
+| SQL Clause | Operator | Math Symbol | Algebraic Representation | Description |
+| :--- | :--- | :---: | :--- | :--- |
+| `SELECT col1, col2` | Projection | $\pi$ | $\pi_{col1, col2}(R)$ | Eliminates unrequested columns |
+| `WHERE condition` | Selection | $\sigma$ | $\sigma_{condition}(R)$ | Filters tuples by propositional predicates |
+| `FROM t1, t2` | Cross Product | $\times$ | $R \times S$ | Cartesian product of relations |
+| `JOIN ... ON` | Theta Join | $\bowtie$ | $R \bowtie_{\theta} S$ | Equi-join / conditional join |
+| `GROUP BY ...` | Aggregation | $\gamma$ | $_{dept}\gamma_{AVG(gpa)}(R)$ | Tuple grouping and aggregate computation |
+| `HAVING condition` | Post-Selection | $\sigma$ | $\sigma_{predicate}(\gamma(R))$ | Filters aggregated groups |
+| `ORDER BY` | Sort | $\tau$ | $\tau_{age \text{ DESC}}(R)$ | Sorts output by specified ordering keys |
+| `DISTINCT` | Deduplication | $\delta$ | $\delta(R)$ | Eliminates duplicate output records |
+| `UNION` | Set Union | $\cup$ | $R \cup S$ | Set union of compatible relations |
+| `INTERSECT` | Set Intersection | $\cap$ | $R \cap S$ | Set intersection |
+| `EXCEPT` | Set Difference | $-$ | $R - S$ | Tuples in $R$ not present in $S$ |
 
 ---
 
-### Step 1: Build the Compiler Binary
+## SQL Dialect & Grammar Coverage
 
-Open a terminal in `compiler/` and run the build script:
+The compiler parses ANSI-SQL queries across three tiered capability levels:
+
+### Tier 1 — Core Relational Operators
+- Attribute and wildcard projections (`SELECT *`, `SELECT id, name`)
+- Complex conditional expressions (`=`, `<>`, `<`, `>`, `<=`, `>=`, `AND`, `OR`, `NOT`)
+- Implicit cross joins via table lists (`FROM students, departments`)
+- Explicit theta joins (`FROM students INNER JOIN departments ON students.dept_id = departments.id`)
+- Duplicate elimination (`SELECT DISTINCT department FROM courses`)
+
+### Tier 2 — Aggregates, Grouping & Ordering
+- Aggregate functions: `COUNT(*)`, `COUNT(DISTINCT col)`, `SUM()`, `AVG()`, `MIN()`, `MAX()`
+- Grouping: `GROUP BY col1, col2`
+- Post-aggregation filters: `HAVING COUNT(*) > 5`
+- Ordering: `ORDER BY gpa DESC, age ASC`
+- Pattern matching & range filters: `LIKE`, `NOT LIKE`, `IN (...)`, `BETWEEN ... AND ...`
+
+### Tier 3 — Multi-Query Set Operations
+- Set Unions: `UNION`, `UNION ALL`, `UNION DISTINCT`
+- Set Intersections: `INTERSECT`
+- Set Differences: `EXCEPT`, `MINUS`
+
+---
+
+## Default Catalog Schema
+
+The engine includes built-in semantic verification against a relational university catalog:
+
+```sql
+students    (id PK, name, age, dept_id FK -> departments.id, gpa)
+departments (id PK, name, building)
+courses     (id PK, code, title, dept_id FK -> departments.id, credits)
+enrollments (student_id FK -> students.id, course_id FK -> courses.id, semester, grade)
+```
+
+Unqualified column names are automatically resolved, and ambiguous references across joins trigger semantic validation errors.
+
+---
+
+## Local Development & Setup
+
+### Option 1: Docker (Recommended)
+
+Requires Docker Desktop. Builds both C++ engine, backend, and frontend inside an isolated container:
 
 ```bash
-cd compiler
-build.bat
+# Clone the repository
+git clone https://github.com/TusharBorase995/sql-to-relational-algebra.git
+cd sql-to-relational-algebra
+
+# Build and start the container
+docker build -t sql2ra .
+docker run -p 5000:5000 sql2ra
 ```
 
-This invokes `win_bison` and `win_flex`, then compiles `sql2ra.exe` into `compiler/bin/sql2ra.exe`.
-
-#### Test the Binary Directly (CLI):
-```bash
-bin\sql2ra.exe -c "SELECT s.name, d.name FROM students s, departments d WHERE s.age > 20 AND s.dept_id = d.id"
-```
-Or view the schema catalog:
-```bash
-bin\sql2ra.exe --schema
-```
+Open your browser at `http://localhost:5000`.
 
 ---
 
-### Step 2: Run the Backend Server
+### Option 2: Native Setup (Windows / Linux)
 
+#### Prerequisites
+- **C++ Compiler**: MinGW-w64 `g++` (Windows) or GCC `g++` (Linux) with C++14 support
+- **Flex & Bison**:
+  - Windows: Portable binaries included in `tools/winflexbison/`
+  - Linux: `sudo apt-get install -y flex bison build-essential`
+- **Node.js**: v18 or higher & `npm`
+
+#### 1. Compile the Core Binary
+- **On Windows**:
+  ```cmd
+  cd compiler
+  build.bat
+  ```
+- **On Linux / macOS**:
+  ```bash
+  cd compiler
+  make
+  ```
+  The executable will be generated at `compiler/bin/sql2ra` (or `sql2ra.exe`).
+
+#### 2. Start the Backend Service
 ```bash
 cd backend
 npm install
 npm start
 ```
-The server will start at `http://localhost:5000`.
+Runs at `http://localhost:5000`.
 
-- `GET /api/health` — Check server and compiler status
-- `GET /api/schema` — Retrieve catalog tables and columns
-- `GET /api/samples` — Retrieve pre-loaded queries
-- `POST /api/compile` — Compile SQL piped via stdin
-
----
-
-### Step 3: Run the React Frontend
-
-Open a new terminal:
-
+#### 3. Start the Frontend Development Server
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+Runs at `http://localhost:5173` (with `/api` automatically proxied to port 5000).
 
-Open your browser at:
+---
+
+## API Documentation
+
+### `POST /api/compile`
+Compiles an arbitrary SQL query and returns the parse tree, token stream, canonical plan, and optimized plan.
+
+**Request Body**:
+```json
+{
+  "sql": "SELECT s.name, d.building FROM students s JOIN departments d ON s.dept_id = d.id WHERE s.age >= 21"
+}
 ```
-http://localhost:5173
+
+**Response**:
+```json
+{
+  "success": true,
+  "tokens": [
+    { "type": "SELECT", "lexeme": "SELECT", "line": 1, "column": 1 },
+    { "type": "IDENTIFIER", "lexeme": "s", "line": 1, "column": 8 }
+  ],
+  "ast": { "type": "SelectStmt", "selectList": [...] },
+  "ra": {
+    "canonical": {
+      "type": "Project",
+      "formula": "π[s.name, d.building](σ[s.age >= 21](students ⋈[s.dept_id = d.id] departments))",
+      "tree": { ... }
+    },
+    "optimized": {
+      "type": "Project",
+      "formula": "π[s.name, d.building](σ[s.dept_id = d.id](σ[s.age >= 21](students) × departments))",
+      "tree": { ... }
+    }
+  }
+}
+```
+
+### `GET /api/schema`
+Returns the active relational database schema catalog.
+
+### `POST /api/schema`
+Uploads a custom schema definition or resets to the default catalog.
+
+---
+
+## Directory Structure
+
+```
+sql-to-relational-algebra/
+├── compiler/                  # Native C++ Compiler Engine
+│   ├── src/
+│   │   ├── lexer.l            # Flex lexer definitions (token rules & line/col tracking)
+│   │   ├── parser.y           # Bison LALR(1) grammar specification
+│   │   ├── ast.h / ast.cpp    # AST node class hierarchy
+│   │   ├── schema.h / .cpp    # Catalog schema manager & semantic validation
+│   │   ├── ra.h / ra.cpp      # AST -> Canonical RA conversion
+│   │   ├── optimizer.h / .cpp # Relational algebra heuristic optimization rules
+│   │   └── main.cpp           # CLI driver & JSON output pipeline
+│   ├── Makefile               # Linux compilation target
+│   └── build.bat              # Windows compilation target
+├── backend/                   # Node.js Express API
+│   ├── server.js              # HTTP server, process manager, and static asset host
+│   └── package.json
+├── frontend/                  # React Single-Page Application
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── SqlEditor.jsx      # CodeMirror 6 editor with error squiggles
+│   │   │   ├── RaTree.jsx         # D3.js interactive tree visualization
+│   │   │   ├── RaFormula.jsx      # Mathematical formula bar with copy features
+│   │   │   ├── TokenTable.jsx     # Lexical token stream display
+│   │   │   ├── SchemaBrowser.jsx  # Interactive schema tree
+│   │   │   └── NodeInspector.jsx  # Node properties drawer
+│   │   ├── App.jsx                # Main interface & state container
+│   │   └── index.css              # Dark theme design system
+│   ├── vite.config.js
+│   └── package.json
+├── Dockerfile                 # Multi-stage production container
+├── render.yaml                # Render cloud deployment blueprint
+└── README.md
 ```
 
 ---
 
-## User Interface Features
+## License
 
-1. **CodeMirror SQL Editor**: Full syntax highlighting, line numbers, automatic bracket matching, and inline red squiggly underlines on syntax errors.
-2. **Interactive D3.js RA Tree**:
-   - Math operator symbols ($\pi, \sigma, \bowtie, \times, \gamma, \tau, \delta, \cup, \cap, -$).
-   - Color-coded badges by operator type.
-   - Smooth pan & zoom controls (Zoom in, Zoom out, Reset view).
-   - Click any node to open the **Node Inspector** drawer showing condition, attributes, and subtree formula.
-3. **Optimized vs. Unoptimized Toggle**: Switch views instantly to observe selection pushdowns, Cartesian-to-Theta-join conversions, and early projections.
-4. **Linear RA Formula Bar**: Formatted mathematical string representation with a one-click copy button.
-5. **Sample Queries Dropdown**: 16 pre-loaded queries covering every grammar feature and optimization pattern.
-6. **Token Stream Table**: Searchable and filterable table displaying every token with type, lexeme, line, and column.
-7. **Catalog Schema Browser**: Interactive tree of database tables, columns, data types, primary keys (PK), and foreign keys (FK).
+Distributed under the [MIT License](LICENSE).
+Built for educational and research purposes in Compiler Design and Database Management Systems.
